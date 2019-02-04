@@ -1,6 +1,6 @@
 # fulleffect
 
-Distributed Reinforcement Learning Environment/Support tools for Othello(Reversi)
+Simple 3d Rendering Engine
 
-* Edax protocol is supported
-* Doing test in EC2
+* Only diffuse rasterizing
+* Plan to implement Path Tracing Renderer
