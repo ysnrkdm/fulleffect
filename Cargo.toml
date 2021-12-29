@@ -8,7 +8,7 @@ edition = "2018"
 image = "*"
 num = "*"
 rand = "0.3"
-rayon = "1.0"
+rayon = "1.5"
 time = "0.1"
 getopts = "0.2"
 
