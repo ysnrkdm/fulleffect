@@ -15,14 +15,14 @@ pub trait Illuminable: Sync {
 }
 
 pub struct Scene {
-    pub elements: Vec<Box<Intersectable>>,
+    pub elements: Vec<Box<dyn Intersectable>>,
     pub skybox: Skybox,
 }
 
 impl Illuminable for Scene {
     fn intersect(&self, ray: &Ray) -> (bool, Intersection) {
         let mut intersection = Intersection::empty();
-        let mut nearest: Option<&Box<Intersectable>> = None;
+        let mut nearest: Option<&Box<dyn Intersectable>> = None;
 
         for e in &self.elements {
             if e.intersect(&ray, &mut intersection) {

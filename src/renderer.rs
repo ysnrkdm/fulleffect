@@ -39,7 +39,7 @@ pub trait Renderer: Sync {
     //<editor-fold desc="Be overridden">
     fn max_sampling(&self) -> u32;
 
-    fn calc_pixel(&self, scene: &Illuminable, camera: &Camera, normalized_coord: &Vector2, sampling: u32) -> Color;
+    fn calc_pixel(&self, scene: &dyn Illuminable, camera: &Camera, normalized_coord: &Vector2, sampling: u32) -> Color;
 
     fn report_progress(&self, accumulation_buf: &Vec<Vector3>, sampling: u32, imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>) -> bool;
 
@@ -49,7 +49,7 @@ pub trait Renderer: Sync {
     //</editor-fold>
 
     //<editor-fold desc="Have default impl">
-    fn render(&mut self, scene: &Illuminable, camera: &Camera, imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>) -> u32 {
+    fn render(&mut self, scene: &dyn Illuminable, camera: &Camera, imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>) -> u32 {
         let resolution = Vector2::new(imgbuf.width() as f64, imgbuf.height() as f64);
         let num_of_pixel = imgbuf.width() * imgbuf.height();
         let mut accumulation_buf = vec![Vector3::zero(); num_of_pixel as usize];
@@ -70,7 +70,7 @@ pub trait Renderer: Sync {
         self.max_sampling()
     }
 
-    fn supersampling(&self, scene: &Illuminable, camera: &Camera, frag_coord: &Vector2, resolution: &Vector2, sampling: u32) -> Color {
+    fn supersampling(&self, scene: &dyn Illuminable, camera: &Camera, frag_coord: &Vector2, resolution: &Vector2, sampling: u32) -> Color {
         let mut accumulator = Color::zero();
 
         for sy in 0..config::SUPER_SAMPLING {
@@ -106,7 +106,7 @@ pub struct DebugRenderer {
 impl Renderer for DebugRenderer {
     fn max_sampling(&self) -> u32 { 1 }
 
-    fn calc_pixel(&self, scene: &Illuminable, camera: &Camera, normalized_coord: &Vector2, _sampling: u32) -> Color {
+    fn calc_pixel(&self, scene: &dyn Illuminable, camera: &Camera, normalized_coord: &Vector2, _sampling: u32) -> Color {
         let ray = camera.ray(&normalized_coord);
         let light_direction = Vector3::new(1.0, 2.0, -1.0).normalized();
         let (hit, intersection) = scene.intersect(&ray);

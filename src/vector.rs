@@ -34,7 +34,7 @@ impl Vector3 {
     //</editor-fold>
 
     pub fn norm(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z)
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     pub fn length(&self) -> f64 {
