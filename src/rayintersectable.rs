@@ -33,6 +33,8 @@ impl Intersection {
 pub trait Intersectable: Sync {
     fn intersect(&self, ray: &Ray, intersection: &mut Intersection) -> bool;
     fn material(&self) -> &Material;
+
+    fn nee_available(&self) -> bool;
 }
 
 pub struct Sphere {
@@ -64,4 +66,6 @@ impl Intersectable for Sphere {
         }
     }
     fn material(&self) -> &Material { &self.material }
+
+    fn nee_available(&self) -> bool { true }
 }

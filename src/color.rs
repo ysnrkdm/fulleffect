@@ -1,13 +1,15 @@
 //extern crate image;
 
-use image::{Rgb};
+use image::Rgb;
 
 use crate::config;
-use crate::math::{saturate};
+use crate::math::saturate;
 use crate::vector::Vector3;
 //use crate::config;
 
 pub type Color = Vector3;
+
+pub const COLOR_NONE: Color = Color::new(0.0, 0.0, 0.0);
 
 pub fn color_to_rgb(color: Color) -> Rgb<u8> {
     Rgb([

@@ -1,5 +1,5 @@
 use crate::vector::{Vector3};
-use crate::color::{Color};
+use crate::color::{Color, COLOR_NONE};
 use crate::texture::{Texture};
 use crate::camera::{Ray};
 use crate::rayintersectable::{Intersection, Intersectable};
@@ -12,6 +12,7 @@ pub struct Surface {
 
 pub trait Illuminable: Sync {
     fn intersect(&self, ray: &Ray) -> (bool, Intersection);
+    fn emissions(&self) -> Vec<&Box<dyn Intersectable>>;
 }
 
 pub struct Scene {
@@ -41,6 +42,10 @@ impl Illuminable for Scene {
             intersection.material.emission = self.skybox.sample(&ray.direction);
             (false, intersection)
         }
+    }
+
+    fn emissions(&self) -> Vec<&Box<dyn Intersectable>> {
+        self.elements.iter().filter(|f| f.nee_available() && f.material().emission.color != COLOR_NONE).collect()
     }
 }
 

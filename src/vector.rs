@@ -1,9 +1,9 @@
 //#![feature(trace_macros)]
 
-use std::ops::{Add, Sub, Mul, Div, Neg, AddAssign, MulAssign};
-use std::cmp::{PartialEq};
+use std::cmp::PartialEq;
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 
-use crate::math::{saturate};
+use crate::math::saturate;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -14,13 +14,12 @@ pub struct Vector3 {
 }
 
 impl Vector3 {
-    //<editor-fold desc="Constructors">
-    pub fn new(x: f64, y: f64, z: f64) -> Vector3 {
-        Vector3 {x, y, z}
+    pub const fn new(x: f64, y: f64, z: f64) -> Vector3 {
+        Vector3 { x, y, z }
     }
 
     pub fn all_of(v: f64) -> Vector3 {
-        Vector3 {x: v, y: v, z: v}
+        Vector3 { x: v, y: v, z: v }
     }
 
     pub fn zero() -> Vector3 {
@@ -30,8 +29,6 @@ impl Vector3 {
     pub fn one() -> Vector3 {
         Vector3::all_of(1.0)
     }
-
-    //</editor-fold>
 
     pub fn norm(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
@@ -63,7 +60,11 @@ impl Vector3 {
     }
 
     pub fn saturated(&self) -> Vector3 {
-        Vector3{ x: saturate(self.x), y: saturate(self.y), z: saturate(self.z) }
+        Vector3 {
+            x: saturate(self.x),
+            y: saturate(self.y),
+            z: saturate(self.z),
+        }
     }
 
     pub fn reflect(&self, normal: &Vector3) -> Vector3 {
@@ -71,7 +72,8 @@ impl Vector3 {
     }
 
     pub fn refract(&self, normal: &Vector3, refractive_index: f64) -> Vector3 {
-        let k = 1.0 - refractive_index * refractive_index * (1.0 - normal.dot(self) * self.dot(normal));
+        let k =
+            1.0 - refractive_index * refractive_index * (1.0 - normal.dot(self) * self.dot(normal));
         if k < 0.0 {
             Vector3::zero()
         } else {
@@ -132,8 +134,24 @@ macro_rules! impl_ops_for_xyz {
 
 //trace_macros!(true);
 
-impl_ops_for_xyz!(impl_op_v2v_for, Vector3, Vector3, (Add, add), (Sub, sub), (Mul, mul), (Div, div));
-impl_ops_for_xyz!(impl_op_v2f_for, Vector3, f64, (Add, add), (Sub, sub), (Mul, mul), (Div, div));
+impl_ops_for_xyz!(
+    impl_op_v2v_for,
+    Vector3,
+    Vector3,
+    (Add, add),
+    (Sub, sub),
+    (Mul, mul),
+    (Div, div)
+);
+impl_ops_for_xyz!(
+    impl_op_v2f_for,
+    Vector3,
+    f64,
+    (Add, add),
+    (Sub, sub),
+    (Mul, mul),
+    (Div, div)
+);
 
 impl Mul<Vector3> for f64 {
     type Output = Vector3;
@@ -194,11 +212,11 @@ pub struct Vector2 {
 
 impl Vector2 {
     pub fn new(x: f64, y: f64) -> Vector2 {
-        Vector2 {x, y}
+        Vector2 { x, y }
     }
 
     pub fn all_of(v: f64) -> Vector2 {
-        Vector2 {x: v, y: v}
+        Vector2 { x: v, y: v }
     }
 
     pub fn zero() -> Vector2 {
@@ -240,8 +258,24 @@ macro_rules! impl_ops_for_xy {
 
 //trace_macros!(true);
 
-impl_ops_for_xy!(impl_op_v2v_for, Vector2, Vector2, (Add, add), (Sub, sub), (Mul, mul), (Div, div));
-impl_ops_for_xy!(impl_op_v2f_for, Vector2, f64, (Add, add), (Sub, sub), (Mul, mul), (Div, div));
+impl_ops_for_xy!(
+    impl_op_v2v_for,
+    Vector2,
+    Vector2,
+    (Add, add),
+    (Sub, sub),
+    (Mul, mul),
+    (Div, div)
+);
+impl_ops_for_xy!(
+    impl_op_v2f_for,
+    Vector2,
+    f64,
+    (Add, add),
+    (Sub, sub),
+    (Mul, mul),
+    (Div, div)
+);
 
 impl Mul<Vector2> for f64 {
     type Output = Vector2;
@@ -257,7 +291,7 @@ impl Neg for Vector2 {
     fn neg(self) -> Vector2 {
         Vector2 {
             x: -self.x,
-            y: -self.y
+            y: -self.y,
         }
     }
 }
