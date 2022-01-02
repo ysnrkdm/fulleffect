@@ -1,6 +1,6 @@
-use std::ops::{Mul, Index, IndexMut};
-use std::cmp::PartialEq;
 use crate::vector::Vector3;
+use std::cmp::PartialEq;
+use std::ops::{Index, IndexMut, Mul};
 
 // matrix[nth_row][mth_col]
 #[derive(Clone, Debug, Copy)]
@@ -13,11 +13,10 @@ macro_rules! swap {
         let tmp = $a_;
         $a_ = $b_;
         $b_ = tmp;
-    }
+    };
 }
 
 impl Matrix44 {
-    //<editor-fold desc="Constructors">
     #[cfg_attr(rustfmt, rustfmt_skip)]
     pub fn all_of(v : f64) -> Matrix44 {
         Matrix44 {
@@ -107,7 +106,6 @@ impl Matrix44 {
                 [0.0, 0.0, 0.0, 1.0]]
         }
     }
-    //</editor-fold>
 
     pub fn inverse(&self) -> Matrix44 {
         let mut s = Matrix44::identity();
@@ -186,14 +184,22 @@ impl Matrix44 {
     }
 
     pub fn det(&self) -> f64 {
-        (self[0][0] * self[1][1] + self[2][2] * self[3][3] +
-            self[0][1] * self[1][2] + self[2][3] * self[3][0] +
-            self[0][2] * self[1][3] + self[2][0] * self[3][1] +
-            self[0][3] * self[1][0] + self[2][1] * self[3][2]) -
-            (self[0][0] * self[3][1] + self[2][2] * self[1][3] +
-                self[0][1] * self[3][2] + self[2][3] * self[1][0] +
-                self[0][2] * self[3][3] + self[2][0] * self[1][1] +
-                self[0][3] * self[3][0] + self[2][1] * self[1][2])
+        (self[0][0] * self[1][1]
+            + self[2][2] * self[3][3]
+            + self[0][1] * self[1][2]
+            + self[2][3] * self[3][0]
+            + self[0][2] * self[1][3]
+            + self[2][0] * self[3][1]
+            + self[0][3] * self[1][0]
+            + self[2][1] * self[3][2])
+            - (self[0][0] * self[3][1]
+                + self[2][2] * self[1][3]
+                + self[0][1] * self[3][2]
+                + self[2][3] * self[1][0]
+                + self[0][2] * self[3][3]
+                + self[2][0] * self[1][1]
+                + self[0][3] * self[3][0]
+                + self[2][1] * self[1][2])
     }
 }
 
@@ -243,9 +249,21 @@ impl Mul<Vector3> for Matrix44 {
 
 impl PartialEq for Matrix44 {
     fn eq(&self, other: &Matrix44) -> bool {
-        self[0][0] == other[0][0] && self[0][1] == other[0][1] && self[0][2] == other[0][2] && self[0][3] == other[0][3] &&
-            self[1][0] == other[1][0] && self[1][1] == other[1][1] && self[1][2] == other[1][2] && self[1][3] == other[1][3] &&
-            self[2][0] == other[2][0] && self[2][1] == other[2][1] && self[2][2] == other[2][2] && self[2][3] == other[2][3] &&
-            self[3][0] == other[3][0] && self[3][1] == other[3][1] && self[3][2] == other[3][2] && self[3][3] == other[3][3]
+        self[0][0] == other[0][0]
+            && self[0][1] == other[0][1]
+            && self[0][2] == other[0][2]
+            && self[0][3] == other[0][3]
+            && self[1][0] == other[1][0]
+            && self[1][1] == other[1][1]
+            && self[1][2] == other[1][2]
+            && self[1][3] == other[1][3]
+            && self[2][0] == other[2][0]
+            && self[2][1] == other[2][1]
+            && self[2][2] == other[2][2]
+            && self[2][3] == other[2][3]
+            && self[3][0] == other[3][0]
+            && self[3][1] == other[3][1]
+            && self[3][2] == other[3][2]
+            && self[3][3] == other[3][3]
     }
 }

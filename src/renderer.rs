@@ -1,7 +1,12 @@
 extern crate image;
 
+use crate::material::PointMaterial;
 use image::{ImageBuffer, Rgb};
+use rand::{Rng, SeedableRng, StdRng};
 use rayon::prelude::*;
+use std::io::stdout;
+use std::io::Write;
+use stopwatch::Stopwatch;
 
 use crate::camera::{Camera, Ray};
 use crate::color::{color_to_rgb, linear_to_gamma, Color};
@@ -60,7 +65,7 @@ pub trait Renderer: Sync {
     ) -> Color;
 
     fn report_progress(
-        &self,
+        &mut self,
         accumulation_buf: &Vec<Vector3>,
         sampling: u32,
         imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
@@ -189,7 +194,7 @@ impl Renderer for DebugRenderer {
     }
 
     fn report_progress(
-        &self,
+        &mut self,
         accumulation_buf: &Vec<Vector3>,
         sampling: u32,
         imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
@@ -210,5 +215,173 @@ impl Renderer for DebugRenderer {
 
     fn tonemap(&self) -> tonemap::TonemapFn {
         self.tonemap
+    }
+}
+
+pub struct PathTracingRenderer {
+    sampling: u32,
+    pub filter: filter::PixelArrayFilterFn,
+    pub tonemap: tonemap::TonemapFn,
+
+    stopwatch: Stopwatch,
+}
+
+impl Renderer for PathTracingRenderer {
+    fn max_sampling(&self) -> u32 {
+        self.sampling
+    }
+
+    fn calc_pixel(
+        &self,
+        scene: &dyn Illuminable,
+        camera: &Camera,
+        emissions: &Vec<&Box<dyn Intersectable>>,
+        normalized_coord: &Vector2,
+        sampling: u32,
+    ) -> Color {
+        let s = ((4.0 + normalized_coord.x) * 100870.0) as usize;
+        let t = ((4.0 + normalized_coord.y) * 100304.0) as usize;
+        let seed: &[_] = &[8700304, sampling as usize, s, t];
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        let mut ray = camera.ray_with_dof(normalized_coord, &mut rng);
+
+        let mut accumulation = Color::zero();
+        let mut reflectance = Color::one();
+
+        for _ in 1..config::PATHTRACING_BOUNCE_LIMIT {
+            let random = rng.gen::<(f64, f64)>();
+            let (hit, intersection) = scene.intersect(&ray);
+            let mut current_reflectance = 1.0;
+
+            if hit {
+                let view = &-ray.direction;
+                if let Some(result) = intersection.material.sample(
+                    random,
+                    &intersection.position,
+                    view,
+                    &intersection.normal,
+                ) {
+                    if intersection.material.nee_available() {
+                        accumulation += reflectance
+                            * PathTracingRenderer::next_event_estimation(
+                                random,
+                                &result.ray.origin,
+                                view,
+                                &intersection.normal,
+                                scene,
+                                &emissions,
+                                &intersection.material,
+                            );
+                    }
+
+                    ray = result.ray;
+                    current_reflectance = result.reflectance;
+                } else {
+                    // Nothing sampled, break path tracing interations
+                    break;
+                }
+            }
+
+            accumulation += reflectance * intersection.material.emission;
+            reflectance *= intersection.material.albedo * current_reflectance;
+
+            if !hit || reflectance == Vector3::zero() {
+                break;
+            }
+        }
+
+        accumulation
+    }
+
+    fn report_progress(
+        &mut self,
+        accumulation_buf: &Vec<Vector3>,
+        sampling: u32,
+        imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
+    ) -> bool {
+        print!(
+            "rendering: {}-th sampling done. Elapsed {} ms\r",
+            sampling,
+            self.stopwatch.elapsed_ms()
+        );
+        let _ = stdout().flush();
+
+        update_imgbuf(
+            self.filter(),
+            self.tonemap(),
+            accumulation_buf,
+            sampling,
+            imgbuf,
+        );
+        self.stopwatch.restart();
+
+        false
+    }
+
+    fn filter(&self) -> filter::PixelArrayFilterFn {
+        self.filter
+    }
+
+    fn tonemap(&self) -> tonemap::TonemapFn {
+        self.tonemap
+    }
+}
+
+impl PathTracingRenderer {
+    pub fn new(
+        sampling: u32,
+        filter: filter::PixelArrayFilterFn,
+        tonemap: tonemap::TonemapFn,
+    ) -> PathTracingRenderer {
+        PathTracingRenderer {
+            sampling,
+            filter,
+            tonemap,
+            stopwatch: Stopwatch::new(),
+        }
+    }
+
+    fn next_event_estimation(
+        random: (f64, f64),
+        position: &Vector3,
+        view: &Vector3,
+        normal: &Vector3,
+        scene: &dyn Illuminable,
+        emissions: &Vec<&Box<dyn Intersectable>>,
+        material: &PointMaterial,
+    ) -> Vector3 {
+        //return Vector3::zero();
+
+        let mut accumulation = Vector3::zero();
+
+        for emission in emissions {
+            let surface = emission.sample_on_surface(random);
+            let shadow_vec = surface.position - *position;
+            let shadow_dir = shadow_vec.normalized();
+            let shadow_ray = Ray {
+                origin: *position,
+                direction: shadow_dir,
+            };
+            let (shadow_hit, shadow_intersection) = scene.intersect(&shadow_ray);
+
+            if shadow_hit
+                && shadow_intersection
+                    .position
+                    .is_approx_same_to(&surface.position)
+            {
+                let dot_0 = normal.dot(&shadow_dir).abs();
+                let dot_l = surface.normal.dot(&shadow_dir).abs();
+                let distance_pow2 = shadow_vec.dot(&shadow_vec);
+                let g = (dot_0 * dot_l) / distance_pow2;
+                let pdf = surface.pdf;
+
+                accumulation += shadow_intersection.material.emission
+                    * material.bsdf(view, normal, &shadow_dir)
+                    * g
+                    / pdf;
+            }
+        }
+
+        accumulation * material.albedo
     }
 }

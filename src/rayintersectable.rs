@@ -1,8 +1,11 @@
+use crate::aabb::Aabb;
+use crate::camera::Ray;
+use crate::color::Color;
 use crate::config;
+use crate::material::{Material, PointMaterial, SurfaceType};
+use crate::math::equals_eps;
+use crate::scene::Surface;
 use crate::vector::{Vector2, Vector3};
-use crate::color::{Color};
-use crate::material::{PointMaterial, Material, SurfaceType};
-use crate::camera::{Ray};
 
 #[derive(Debug)]
 pub struct Intersection {
@@ -35,6 +38,7 @@ pub trait Intersectable: Sync {
     fn material(&self) -> &Material;
 
     fn nee_available(&self) -> bool;
+    fn sample_on_surface(&self, random: (f64, f64)) -> Surface;
 }
 
 pub struct Sphere {
@@ -58,14 +62,87 @@ impl Intersectable for Sphere {
             intersection.uv.y = 1.0 - intersection.normal.y.acos() / config::PI;
             intersection.uv.x = 0.5
                 - intersection.normal.z.signum()
-                * (intersection.normal.x / intersection.normal.xz().length()).acos()
-                / config::PI2;
+                    * (intersection.normal.x / intersection.normal.xz().length()).acos()
+                    / config::PI2;
             true
         } else {
             false
         }
     }
-    fn material(&self) -> &Material { &self.material }
 
-    fn nee_available(&self) -> bool { true }
+    fn material(&self) -> &Material {
+        &self.material
+    }
+
+    fn nee_available(&self) -> bool {
+        true
+    }
+
+    // http://apollon.issp.u-tokyo.ac.jp/~watanabe/pdf/prob.pdf
+    fn sample_on_surface(&self, random: (f64, f64)) -> Surface {
+        let theta = config::PI2 * random.0;
+        let unit_z = 1.0 - 2.0 * random.1;
+        let a = (1.0 - unit_z * unit_z).sqrt();
+
+        let normal = Vector3::new(a * theta.cos(), a * theta.sin(), unit_z);
+        let position = self.center + (self.radius + config::OFFSET) * normal;
+        let pdf = (4.0 * config::PI * self.radius * self.radius).recip();
+        Surface {
+            position,
+            normal,
+            pdf,
+        }
+    }
+}
+
+pub struct Cuboid {
+    pub aabb: Aabb,
+    pub material: Material,
+}
+
+impl Intersectable for Cuboid {
+    fn intersect(&self, ray: &Ray, intersection: &mut Intersection) -> bool {
+        let (hit, distance) = self.aabb.intersect_with_ray(ray);
+        if hit && distance < intersection.distance {
+            intersection.position = ray.origin + ray.direction * distance;
+            intersection.distance = distance;
+            let uvw = (intersection.position - self.aabb.min) / (self.aabb.max - self.aabb.min);
+
+            if equals_eps(intersection.position.y, self.aabb.max.y) {
+                intersection.normal = Vector3::new(0.0, 1.0, 0.0);
+                intersection.uv = uvw.xiz();
+            } else if equals_eps(intersection.position.y, self.aabb.min.y) {
+                intersection.normal = Vector3::new(0.0, -1.0, 0.0);
+                intersection.uv = uvw.xiz();
+            } else if equals_eps(intersection.position.x, self.aabb.min.x) {
+                intersection.normal = Vector3::new(-1.0, 0.0, 0.0);
+                intersection.uv = uvw.zy();
+            } else if equals_eps(intersection.position.x, self.aabb.max.x) {
+                intersection.normal = Vector3::new(1.0, 0.0, 0.0);
+                intersection.uv = uvw.zy();
+            } else if equals_eps(intersection.position.z, self.aabb.min.z) {
+                intersection.normal = Vector3::new(0.0, 0.0, -1.0);
+                intersection.uv = uvw.xy();
+            } else if equals_eps(intersection.position.z, self.aabb.max.z) {
+                intersection.normal = Vector3::new(0.0, 0.0, 1.0);
+                intersection.uv = uvw.xy();
+            }
+
+            true
+        } else {
+            false
+        }
+    }
+
+    fn material(&self) -> &Material {
+        &self.material
+    }
+
+    fn nee_available(&self) -> bool {
+        false
+    }
+
+    fn sample_on_surface(&self, _: (f64, f64)) -> Surface {
+        unimplemented!()
+    }
 }

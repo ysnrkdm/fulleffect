@@ -1,6 +1,7 @@
 //extern crate image;
 
 use image::Rgb;
+use image::Rgba;
 
 use crate::config;
 use crate::math::saturate;
@@ -9,14 +10,20 @@ use crate::vector::Vector3;
 
 pub type Color = Vector3;
 
-pub const COLOR_NONE: Color = Color::new(0.0, 0.0, 0.0);
-
 pub fn color_to_rgb(color: Color) -> Rgb<u8> {
     Rgb([
         (255.0 * saturate(color.x)) as u8,
         (255.0 * saturate(color.y)) as u8,
         (255.0 * saturate(color.z)) as u8,
     ])
+}
+
+pub fn rgba_to_color(color: Rgba<u8>) -> Color {
+    Color::new(
+        color.data[0] as f64 / 255.0,
+        color.data[1] as f64 / 255.0,
+        color.data[2] as f64 / 255.0,
+    )
 }
 
 fn gamma_to_linear_f64(v: f64) -> f64 {

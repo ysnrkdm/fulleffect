@@ -1,5 +1,6 @@
 //#![feature(trace_macros)]
 
+use crate::config::EPS;
 use std::cmp::PartialEq;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 
@@ -91,6 +92,14 @@ impl Vector3 {
 
     pub fn xz(&self) -> Vector2 {
         Vector2::new(self.x, self.z)
+    }
+
+    pub fn xiz(&self) -> Vector2 {
+        Vector2::new(self.x, 1.0 - self.z)
+    }
+
+    pub fn is_approx_same_to(&self, other: &Vector3) -> bool {
+        (*self - *other).norm() < EPS * 4.0
     }
 }
 

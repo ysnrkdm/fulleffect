@@ -1,8 +1,8 @@
-use crate::vector::{Vector3};
-use crate::color::{Color, COLOR_NONE};
-use crate::texture::{Texture};
-use crate::camera::{Ray};
-use crate::rayintersectable::{Intersection, Intersectable};
+use crate::camera::Ray;
+use crate::color::Color;
+use crate::rayintersectable::{Intersectable, Intersection};
+use crate::texture::Texture;
+use crate::vector::Vector3;
 
 pub struct Surface {
     pub position: Vector3,
@@ -45,7 +45,10 @@ impl Illuminable for Scene {
     }
 
     fn emissions(&self) -> Vec<&Box<dyn Intersectable>> {
-        self.elements.iter().filter(|f| f.nee_available() && f.material().emission.color != COLOR_NONE).collect()
+        self.elements
+            .iter()
+            .filter(|f| f.nee_available() && f.material().emission.color != Color::zero())
+            .collect()
     }
 }
 
