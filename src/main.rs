@@ -32,7 +32,7 @@ fn main() {
     let width = 1920u32;
     let height = 1080u32;
 
-    let (camera, scene) = sample_scenes::simple_scene2::sample_scene();
+    let (camera, scene) = sample_scenes::simple_scene_mesh::sample_scene();
 
     let mut _renderer = DebugRenderer {
         filter: filter::identity_filter,
@@ -40,7 +40,7 @@ fn main() {
         mode: DebugRenderMode::Shading,
     };
     let mut path_tracing_renderer =
-        PathTracingRenderer::new(100, filter::identity_filter, tonemap::none);
+        PathTracingRenderer::new(3, filter::identity_filter, tonemap::none);
 
     let mut stopwatch = Stopwatch::start_new();
     let sampled = render_and_save_image(&mut path_tracing_renderer, width, height, &camera, scene);

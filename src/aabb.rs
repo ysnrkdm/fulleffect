@@ -1,9 +1,28 @@
 use crate::camera::Ray;
+use crate::mesh::Triangle;
 use crate::vector::Vector3;
 
 pub struct Aabb {
     pub min: Vector3,
     pub max: Vector3,
+}
+
+impl From<Triangle> for Aabb {
+    fn from(triangle: Triangle) -> Self {
+        let Triangle { v0, v1, v2 } = triangle;
+        Aabb {
+            min: Vector3::new(
+                v0.x.min(v1.x).min(v2.x),
+                v0.y.min(v1.y).min(v2.y),
+                v0.z.min(v1.z).min(v2.z),
+            ),
+            max: Vector3::new(
+                v0.x.max(v1.x).max(v2.x),
+                v0.y.max(v1.y).max(v2.y),
+                v0.z.max(v1.z).max(v2.z),
+            ),
+        }
+    }
 }
 
 impl Aabb {
