@@ -19,18 +19,18 @@ fn render_and_save_image<R: Renderer>(
 ) -> u32 {
     let mut imgbuf = image::ImageBuffer::new(width, height);
     let sampled = renderer.render(&scene, camera, &mut imgbuf);
-    let _ = image::ImageRgb8(imgbuf).save("result.png");
+    let _ = image::DynamicImage::ImageRgb8(imgbuf).save("result.png");
     sampled
 }
 
 fn main() {
     println!("Start rendering...");
 
-    // let width = 640u32;
-    // let height = 480u32;
+    let width = 640u32;
+    let height = 480u32;
 
-    let width = 1920u32;
-    let height = 1080u32;
+    // let width = 1920u32;
+    // let height = 1080u32;
 
     let (camera, scene) = sample_scenes::simple_scene_mesh::sample_scene();
 
@@ -40,7 +40,7 @@ fn main() {
         mode: DebugRenderMode::Shading,
     };
     let mut path_tracing_renderer =
-        PathTracingRenderer::new(3, filter::identity_filter, tonemap::none);
+        PathTracingRenderer::new(10, filter::identity_filter, tonemap::none);
 
     let mut stopwatch = Stopwatch::start_new();
     let sampled = render_and_save_image(&mut path_tracing_renderer, width, height, &camera, scene);

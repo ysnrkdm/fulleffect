@@ -20,9 +20,9 @@ pub fn color_to_rgb(color: Color) -> Rgb<u8> {
 
 pub fn rgba_to_color(color: Rgba<u8>) -> Color {
     Color::new(
-        color.data[0] as f64 / 255.0,
-        color.data[1] as f64 / 255.0,
-        color.data[2] as f64 / 255.0,
+        color.0[0] as f64 / 255.0,
+        color.0[1] as f64 / 255.0,
+        color.0[2] as f64 / 255.0,
     )
 }
 
