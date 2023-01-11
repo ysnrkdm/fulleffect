@@ -1,6 +1,9 @@
 # fulleffect
 
-Simple 3d Rendering Engine
+Simple 3d Rendering Engine using Path Tracing technique
 
-* Only diffuse rasterizing
-* Plan to implement Path Tracing Renderer
+## TODOs
+
+* Support to load scene file rather than hardcoded scene info
+
+![result.png](https://raw.githubusercontent.com/ysnrkdm/fulleffect/main/result.png)
